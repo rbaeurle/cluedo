@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
 import java.util.Scanner;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
@@ -22,11 +21,11 @@ public class CluedoGUI
    private Scanner scanner;
    private Formatter formatter;
 
-   @Autowired
-   private Cluedo       cluedo;
+   private final Cluedo cluedo;
 
-   private CluedoGUI()
+   public CluedoGUI(Cluedo cluedo)
    {
+      this.cluedo = cluedo;
       scanner = new Scanner(System.in);
       formatter = new Formatter(System.out);
    }
@@ -256,12 +255,6 @@ public class CluedoGUI
          c = '-';
       }
       return c;
-   }
-
-   public static void main(String[] args) {
-      CluedoGUI gui = new CluedoGUI();
-      gui.init();
-      gui.run();
    }
 
    private void printStatus() {
