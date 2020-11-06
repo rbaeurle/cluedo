@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class CluedoApplication implements CommandLineRunner {
 
+
   @Autowired
   CluedoGUI gui;
 
@@ -20,7 +21,7 @@ public class CluedoApplication implements CommandLineRunner {
   }
 
   @Override
-  public void run(String... args) throws Exception {
+  public void run(String... args) {
     gui.init();
     gui.run();
   }

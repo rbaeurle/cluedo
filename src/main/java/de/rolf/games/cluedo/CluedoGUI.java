@@ -19,7 +19,7 @@ public class CluedoGUI
 {
 
    private Scanner scanner;
-   private Formatter formatter;
+   private final Formatter formatter;
 
    private final Cluedo cluedo;
 
@@ -32,34 +32,7 @@ public class CluedoGUI
 
    public void init()
    {
-      // TODO: Test
       List<String> spielerNamen = new ArrayList<>();
-      String source = "Maike" + System.lineSeparator() +
-                      "Annso" + System.lineSeparator() +
-                      "Emilie" + System.lineSeparator() +
-                      "" + System.lineSeparator() +
-                      "0" + System.lineSeparator() +
-                      "4" + System.lineSeparator() +
-                      "6" + System.lineSeparator() +
-                      "15" + System.lineSeparator() +
-                      "21" + System.lineSeparator() +
-                      "" + System.lineSeparator() +
-                      // DAPP
-                      "2" + System.lineSeparator() +
-                      "1" + System.lineSeparator() +
-                      // Verdacht
-                      "1" + System.lineSeparator() +
-                      "0" + System.lineSeparator() +
-                      "1" + System.lineSeparator() +
-                      "0" + System.lineSeparator() +
-                      "3" + System.lineSeparator() +
-                      "n" + System.lineSeparator() +
-                      "j"
-
-
-          // "" + System.lineSeparator()
-          ;
-      scanner = new Scanner(source);
       formatter.format("%nAndere Spieler in Reihenfolge eingeben:%n");
       String n = scanner.nextLine();
       while ( (n != null) && !n.trim().isEmpty())
@@ -70,8 +43,6 @@ public class CluedoGUI
       cluedo.init( spielerNamen.toArray( new String[0]));
 
       leseKarten( cluedo.getIch());
-      // TODO: test
-      //scanner = new Scanner( System.in);
       printScorecard();
 
    }
@@ -122,7 +93,7 @@ public class CluedoGUI
    private void leseVerdacht()
    {
       formatter.format("%n+++ Neuer Verdacht ++++%n");
-      Verdacht v = null;
+      Verdacht v;
       do {
          formatter.format( "%s", "Wer hat Verdacht gestellt: ");
          printMitspieler();
@@ -164,7 +135,6 @@ public class CluedoGUI
    }
 
    /**
-    * @param v
     */
    private void printVerdacht( Verdacht v)
    {

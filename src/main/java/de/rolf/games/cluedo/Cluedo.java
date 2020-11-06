@@ -188,7 +188,6 @@ public class Cluedo
 
    /**
     * Setzt die angegebene Karte für den entsprechenden Spieler
-    * @return true, falls Karte ohne Konflikt gesetzt werden konnte
     */
    private void setKarte4Spieler(Karte karte, Spieler spieler) {
 
@@ -217,9 +216,8 @@ public class Cluedo
   /**
    * Analysiert Scorecard und Verdacht-Liste so lange, bis sich keine Veränderungen mehr ergeben
    */
-  private final void analysiere() {
+  private void analysiere() {
 
-    //boolean changed = false;
     // hat sich Status in scorecard geändert
     long before = scorecard.hashCode();
 
@@ -312,7 +310,7 @@ public class Cluedo
     }
   }
 
-   private final Spieler getNextMitspieler(Spieler sp) {
+   private Spieler getNextMitspieler(Spieler sp) {
       int index = mitSpieler.indexOf(sp);
       return mitSpieler.get((index+1)%mitSpieler.size());
    }

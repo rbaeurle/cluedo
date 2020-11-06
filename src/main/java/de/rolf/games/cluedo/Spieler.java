@@ -1,6 +1,3 @@
-/**
- * 
- */
 package de.rolf.games.cluedo;
 
 import lombok.Data;
@@ -15,10 +12,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Spieler
 {
-
    @NonNull
-   final private String name;
-   final private int anzahlKarten;
+   private final String name;
+   private final int anzahlKarten;
 
 }
 

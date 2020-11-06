@@ -13,7 +13,7 @@ public interface Karte
       PORZ, // Baronin von
       BLOOM, // Professor
       GRUEN, // Direktor
-      MING, // Fr�ulein
+      MING, // Fräulein
       WEISS // Frau
    }
    

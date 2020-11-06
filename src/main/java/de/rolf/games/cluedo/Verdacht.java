@@ -1,6 +1,3 @@
-/**
- * 
- */
 package de.rolf.games.cluedo;
 
 import java.util.stream.Stream;

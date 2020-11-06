@@ -23,10 +23,8 @@ class Scorecard {
     karten = k.toArray(new Karte[0]);
     spieler = sp.toArray(new Spieler[0]);
     scorecard = new Status[karten.length][spieler.length];
-    for (int i = 0; i < scorecard.length; i++) {
-      for (int j = 0; j < scorecard[i].length; j++) {
-        scorecard[i][j] = Status.UNBEKANNT;
-      }
+    for (Status[] statuses : scorecard) {
+      Arrays.fill(statuses, Status.UNBEKANNT);
     }
   }
 
@@ -142,6 +140,6 @@ class Scorecard {
   enum Status {
     UNBEKANNT, // bisher unbekannt
     BESITZT_NICHT, // Spieler hat Karte nicht
-    BESITZT; // Spieler hat Karte
+    BESITZT // Spieler hat Karte
   }
 }
