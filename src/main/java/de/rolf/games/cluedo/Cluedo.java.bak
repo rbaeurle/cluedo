@@ -1,0 +1,244 @@
+package de.rolf.games.cluedo;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.springframework.stereotype.Component;
+
+/**
+ * @author brf
+ */
+@Component
+public class Cluedo {
+
+  private final List<Class<? extends Karte>> kartenTypen;
+  private final List<Karte> karten;
+
+  private final List<Verdacht> verdachtListe;
+  private Scorecard scorecard = null;
+
+  private MitSpieler spieler;
+
+  public Cluedo() {
+    karten = new ArrayList<>();
+    karten.addAll(Arrays.asList(Karte.Taeter.values()));
+    karten.addAll(Arrays.asList(Karte.Tatwaffe.values()));
+    karten.addAll(Arrays.asList(Karte.Tatort.values()));
+
+    verdachtListe = new ArrayList<>();
+    kartenTypen = Arrays.asList(Karte.Taeter.class, Karte.Tatwaffe.class, Karte.Tatort.class);
+
+  }
+
+
+  /**
+   * Initialisiert das Spiel mit den angegeben Mitspielern
+   *
+   * @param name Namen der anderen Mitspieler
+   */
+  public Scorecard init(String... name) {
+
+    int anzahlKartenProSpieler = (karten.size() - MitSpieler.NUMBER_CARDS_X) / (name.length + 1);
+    int anzahlKartenDapp = karten.size() - MitSpieler.NUMBER_CARDS_X - anzahlKartenProSpieler * (name.length + 1);
+
+    spieler = new MitSpieler(anzahlKartenProSpieler, anzahlKartenDapp);
+    Arrays.stream(name)
+          .forEach(s -> spieler.add(new Spieler(s, anzahlKartenProSpieler)));
+
+    scorecard = new Scorecard(karten, spieler);
+    return scorecard;
+  }
+
+  /**
+   * Gibt alle Karten eines Typs zurück
+   *
+   * @param kartenTyp Enum-Klasse des Typs
+   * @return Array an Karten
+   */
+  public final Karte[] getAnzahlKarten(Class<? extends Karte> kartenTyp) {
+    return kartenTyp.getEnumConstants();
+  }
+
+
+  public final List<Class<? extends Karte>> getKartenTypen() {
+    return kartenTypen;
+  }
+
+  /**
+   * @return Die Anzahl der Karten die der Spieler im entsprechendem Zustand besitzt.
+   */
+  public final int getAnzahlKarten(Spieler s, Status status) {
+    return scorecard.getKarten(s, status).size();
+  }
+
+
+  /**
+   * Setzt die angegebene Karte für den entsprechenden Spieler und analysiert scorecard
+   */
+  public void setKarte(Karte k, Spieler s) {
+    setKarte4Spieler(k, s);
+    analysiere();
+  }
+
+  /**
+   * Verarbeitung eines neuen Verdachts
+   */
+  public void addVerdacht(Verdacht v) {
+    verdachtListe.add(v);
+    // - alle, die Verdacht nicht widerlegt haben, haben keine der Karten
+    Spieler ersteller = v.getErstelltVon();
+    Spieler next = scorecard.getMitSpieler().nextMitSpieler(ersteller);
+    while (!next.equals(ersteller) && !next.equals(v.getWiderlegtVon())) {
+      scorecard.setStatus(v.getTaeter(), next, Status.BESITZT_NICHT);
+      scorecard.setStatus(v.getWaffe(), next, Status.BESITZT_NICHT);
+      scorecard.setStatus(v.getTatort(), next, Status.BESITZT_NICHT);
+      next = spieler.nextMitSpieler(next);
+    }
+    analysiere();
+  }
+
+
+  public List<Verdacht> getVerdacht() {
+    return java.util.Collections.unmodifiableList(verdachtListe);
+  }
+
+
+  private boolean isDappBekannt() {
+    return !scorecard.getKarten(spieler.getDapp(), Status.BESITZT).isEmpty();
+  }
+
+
+  /**
+   * Setzt die angegebene Karte für den entsprechenden Spieler
+   */
+  private void setKarte4Spieler(Karte karte, Spieler currentSpieler) {
+
+    scorecard.setStatus(karte, currentSpieler, Status.BESITZT);
+    // X besitzt dann keine andere Karte gleichen Typs
+    if (currentSpieler.equals(this.spieler.getX())) {
+      Arrays.stream(karte.getClass()
+                         .getEnumConstants())
+            .filter(k -> !k.equals(karte))
+            .forEach(k -> scorecard.setStatus(k, this.spieler.getX(), Status.BESITZT_NICHT));
+    }
+    // alle anderen Spieler haben Karte zwangsläufig nicht
+    this.spieler.get()
+                .stream()
+                .filter(s -> !s.equals(currentSpieler))
+                .forEach(s -> scorecard.setStatus(karte, s, Status.BESITZT_NICHT));
+
+    //
+    // wenn fÜr den Spieler alle Karten bekannt sind, besitzt er die restlichen Karten nicht mehr
+    //
+    if (scorecard.getKarten(currentSpieler, Status.BESITZT).size() == currentSpieler.getAnzahlKarten()) {
+      karten.stream()
+            .filter(k -> scorecard.getStatus(k, currentSpieler) != Status.BESITZT)
+            .forEach(k -> scorecard.setStatus(k, currentSpieler, Status.BESITZT_NICHT));
+    }
+  }
+
+  /**
+   * Analysiert Scorecard und Verdacht-Liste so lange, bis sich keine Veränderungen mehr ergeben
+   */
+  private void analysiere() {
+
+    // hat sich Status in scorecard geändert
+    long before = scorecard.hashCode();
+
+    // check ...
+    // zuerst Spieler
+    for (Spieler s : spieler.get()) {
+
+      // TODO
+      Karte[] kartenUnbkt = scorecard.getKarten(s, Status.UNBEKANNT).toArray(Karte[]::new);
+      if (kartenUnbkt.length == 0) {
+        // alles bekannt für Spieler
+        System.out.println("Kenne alles von " + s.getName());
+        continue;
+      }
+
+      // TODO
+      Karte[] karteBeknt = scorecard.getKarten(s, Status.BESITZT).toArray(Karte[]::new);
+      // wenn Anzahl der unbekannten Karten gleich der Anzahl der 'fehlenden' besitzten Karten ist
+      // dann müssen diese Karten die richtigen sein
+      if (kartenUnbkt.length == (s.getAnzahlKarten() - karteBeknt.length)) {
+        Arrays.stream(kartenUnbkt)
+              .forEach(k -> setKarte4Spieler(k, s));
+      }
+
+      // Für 'X' gilt obige Aussage sogar für Karten gleichen Typs
+      if (spieler.getX()
+                 .equals(s)) {
+        // Wenn genau EINE Karte von einem Typ den Status unbekannt hat, dann MUSS diese Karte 'X'
+        // gehören ....
+        kartenTypen.stream()
+                   // TODO
+                   .map(cz -> scorecard.getKarten(s, cz, Status.UNBEKANNT).toArray(Karte[]::new))
+                   .filter(k -> k.length == 1)
+                   .forEach(k -> setKarte4Spieler(k[0], spieler.getX()));
+      }
+    }
+
+    //
+    // Überprüfe Karten
+    //
+    for (Karte k : karten) {
+      if (scorecard.getBesitzer(k) != null) {
+        // Alles über Karte bekannt
+        continue;
+      }
+      // Falls Karte keinen Besitzer hat und alle außer einem Spieler die Karte Nicht besitzen,
+      // dann hat dieser verbeleibende die Karte
+      // TODO
+      Spieler[] unbknt = scorecard.getSpieler(k, Status.UNBEKANNT).toArray(Spieler[]::new);
+      if (unbknt.length == 1) {
+        setKarte4Spieler(k, unbknt[0]);
+      }
+    }
+
+    //
+    // Überprüfe Verdacht Liste
+    //
+    for (Verdacht v : verdachtListe) {
+      if (v.isWiderlegt()) {
+        final Spieler widerlegtVon = v.getWiderlegtVon();
+        // wenn genau eine Karte keinem Spieler zugeordnet ist und der Spieler, der widerlegt hat
+        // keine der anderen zwei Karten bsesitzt, dann muss der 'Widerleger' diese Karte besitzen
+        Spieler s1 = scorecard.getBesitzer(v.getTaeter());
+        Spieler s2 = scorecard.getBesitzer(v.getWaffe());
+        Spieler s3 = scorecard.getBesitzer(v.getTatort());
+        if ((s1 == null) && (s2 != null) && !s2.equals(widerlegtVon) && (s3 != null) && !s3.equals(widerlegtVon)) {
+          setKarte4Spieler(v.getTaeter(), widerlegtVon);
+        } else if ((s1 != null) && !s1.equals(widerlegtVon) && (s2 == null) && (s3 != null) && !s3.equals(widerlegtVon)) {
+          setKarte4Spieler(v.getWaffe(), widerlegtVon);
+        } else if ((s1 != null) && !s1.equals(widerlegtVon) && (s2 != null) && !s2.equals(widerlegtVon) && (s3 == null)) {
+          setKarte4Spieler(v.getTatort(), widerlegtVon);
+        }
+      } else {
+        // nicht widerlegt
+        if (isDappBekannt()) {
+          // Dapp ist bekannt
+          // 1. falls 'ich'
+          // oder
+          // 2. jemand anderes dessen Karten bekannt sind (also auch ich)
+          // dann müssen die nicht zugeordneten Karten des Verdachts die gesuchten sein ('X')
+          if (v.getErstelltVon()
+               .equals(spieler.getIch()) || scorecard.getKarten(v.getErstelltVon(), Status.BESITZT).size() == v.getErstelltVon()
+                                                                                                               .getAnzahlKarten()) {
+            // 'Ich' habe Verdacht gestellt -> falls Dapp bekannt sind die nicht-zugeordneten Karten
+            // die Gesuchten
+            v.getKarten()
+             .stream()
+             .filter(k -> scorecard.getBesitzer(k) == null)
+             .forEach(k -> setKarte4Spieler(k, spieler.getX()));
+          }
+        }
+      }
+    }
+
+    if (before != scorecard.hashCode()) {
+      analysiere();
+    }
+  }
+
+}

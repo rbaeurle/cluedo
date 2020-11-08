@@ -22,7 +22,6 @@ public class CluedoApplication implements CommandLineRunner {
 
   @Override
   public void run(String... args) {
-    gui.init();
     gui.run();
   }
 }
