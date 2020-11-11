@@ -61,7 +61,7 @@ class ScorecardTest {
     scorecard.setStatus(Karte.Tatwaffe.AXT, spielerA, Status.BESITZT)
     scorecard.setStatus(Karte.Taeter.MING, spielerC, Status.BESITZT)
 
-    var actual = scorecard.getKarten(spielerA, Karte.Tatwaffe::class.java, Status.BESITZT)
+    val actual = scorecard.getKarten(spielerA, Karte.Tatwaffe::class.java, Status.BESITZT)
     assertThat(actual).containsExactlyInAnyOrder(Karte.Tatwaffe.AXT)
 
   }
