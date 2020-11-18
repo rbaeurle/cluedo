@@ -19,10 +19,12 @@ class CluedoGUI {
         return eingabe
     }
 
-    private fun init(): Scorecard {
+    private fun init(inputFile: File?): Scorecard {
 
         val spielerNamen: MutableList<String> = ArrayList()
-        scanner = java.util.Scanner(File("src/main/resources/test.txt"))
+        if (inputFile != null) {
+            scanner = java.util.Scanner(inputFile)
+        }
         println()
         println("Andere Spieler in Reihenfolge eingeben:")
         var n = scanner.nextLine()
@@ -35,35 +37,35 @@ class CluedoGUI {
         return cluedo.scorecard
     }
 
-    fun run() {
-        scorecard = init()
+    fun run(inputFile: File?) {
+        scorecard = init(inputFile)
         leseKarten(
-          scorecard.mitSpieler.ich
+            scorecard.mitSpieler.ich
         )
         printScorecard()
         var exit = false
         do {
             println("[0]: Ende - [1]: Verdacht - [2]: Dapp - [3]: Status")
             when (readNextLine()) {
-              "0" -> {
-                if (bestaetigung) {
-                  exit = true
-                  println()
-                  println("Verlasse Cluedo ....")
+                "0" -> {
+                    if (bestaetigung) {
+                        exit = true
+                        println()
+                        println("Verlasse Cluedo ....")
+                    }
                 }
-              }
-              "1" -> {
-                leseVerdacht()
-                printScorecard()
-              }
-              "2" -> {
-                leseKarten(scorecard.mitSpieler.dapp)
-                printScorecard()
-              }
-              "3" -> {
-                scanner = java.util.Scanner(System.`in`)
-                printStatus()
-              }
+                "1" -> {
+                    leseVerdacht()
+                    printScorecard()
+                }
+                "2" -> {
+                    leseKarten(scorecard.mitSpieler.dapp)
+                    printScorecard()
+                }
+                "3" -> {
+                    scanner = java.util.Scanner(System.`in`)
+                    printStatus()
+                }
                 else -> println("Falsche Eingabe !!$nl")
             }
         } while (!exit)
@@ -118,13 +120,13 @@ class CluedoGUI {
     private fun printVerdacht(v: Verdacht) {
         val widerLeger = if (v.widerlegtVon != null) v.widerlegtVon!!.name else "(niemand)"
         println(
-          " %-7s [%-7s, %-12s, %-12s] --> %-7s".format(
-            v.erstelltVon.name,
-            v.taeter,
-            v.waffe,
-            v.tatort,
-            widerLeger
-          )
+            " %-7s [%-7s, %-12s, %-12s] --> %-7s".format(
+                v.erstelltVon.name,
+                v.taeter,
+                v.waffe,
+                v.tatort,
+                widerLeger
+            )
         )
     }
 
@@ -183,14 +185,14 @@ class CluedoGUI {
         print("${nl}${String.format("%15s", "")}")
         spieler.get().map {
             String.format(
-              "%15s%-8s",
-              it.name,
-              "(${it.anzahlKarten}/${scorecard.getKarten(it, Status.BESITZT).size}/${
-                scorecard.getKarten(
-                  it,
-                  Status.UNBEKANNT
-                ).size
-              })"
+                "%15s%-8s",
+                it.name,
+                "(${it.anzahlKarten}/${scorecard.getKarten(it, Status.BESITZT).size}/${
+                    scorecard.getKarten(
+                        it,
+                        Status.UNBEKANNT
+                    ).size
+                })"
             )
         }.forEach { print(it) }
         println()
@@ -198,22 +200,22 @@ class CluedoGUI {
             print(String.format("%15s", karte))
             for (sp in spieler.get()) {
                 print(
-                  "${String.format("%15s", getStatusSign(scorecard.getStatus(karte, sp)))}${
-                    String.format(
-                      "%8s",
-                      ""
-                    )
-                  }"
+                    "${String.format("%15s", getStatusSign(scorecard.getStatus(karte, sp)))}${
+                        String.format(
+                            "%8s",
+                            ""
+                        )
+                    }"
                 )
             }
             println()
-            println()
         }
+        println()
     }
 
     private fun getStatusSign(status: Status) = when (status) {
-      Status.BESITZT -> 'x'
-      Status.BESITZT_NICHT -> '-'
+        Status.BESITZT -> 'x'
+        Status.BESITZT_NICHT -> '-'
         else -> ' '
     }
 
