@@ -200,7 +200,7 @@ class CluedoGUI {
             print(String.format("%15s", karte))
             for (sp in spieler.get()) {
                 print(
-                    "${String.format("%15s", getStatusSign(scorecard.getStatus(karte, sp)))}${
+                    "${String.format("%15s", getStatusSign(karte, sp))}${
                         String.format(
                             "%8s",
                             ""
@@ -213,10 +213,20 @@ class CluedoGUI {
         println()
     }
 
-    private fun getStatusSign(status: Status) = when (status) {
-        Status.BESITZT -> 'x'
-        Status.BESITZT_NICHT -> '-'
-        else -> ' '
+    private fun getStatusSign(karte: Karte, spieler: Spieler): Char {
+        val status = scorecard.getStatus(karte, spieler)
+        val sign = when (status) {
+            Status.BESITZT -> 'x'
+            Status.BESITZT_NICHT -> '-'
+            else -> {
+                if (cluedo.maybe(karte,spieler)) {
+                    'o'
+                } else {
+                    ' '
+                }
+            }
+        }
+        return sign
     }
 
     private fun printStatus() {

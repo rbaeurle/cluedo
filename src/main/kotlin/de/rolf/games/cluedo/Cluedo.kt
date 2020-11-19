@@ -1,6 +1,8 @@
 package de.rolf.games.cluedo
 
-import de.rolf.games.cluedo.Karte.*
+import de.rolf.games.cluedo.Karte.Taeter
+import de.rolf.games.cluedo.Karte.Tatort
+import de.rolf.games.cluedo.Karte.Tatwaffe
 
 class Cluedo(name: List<String>) {
 
@@ -83,6 +85,33 @@ class Cluedo(name: List<String>) {
             .map { Pair(it.second.keys.firstOrNull { karte -> it.second[karte] == null }, it.first) }
             // set Karte
             .forEach { setKarte4Spieler(it.first!!, it.second) }
+
+        // überprüfe alle Verdacht, die ein Mit-Spieler widerlegt hat, sie aber
+        // keine Karte BESITZT und bilde alle Kombinationen aus möglichen BESITZ-Konstellationen
+        val map = _verdachtListe.filter {
+            it.isWiderlegt && it.erstelltVon != spieler.ich && karten.none { karte ->
+                scorecard.getBesitzer(karte) == it.widerlegtVon
+            }
+        }.groupBy { it.widerlegtVon }
+        map.forEach { entry ->
+            val spieler = entry.key!!
+            val all = entry.value.map { verdacht ->  verdacht.karten.filter { scorecard.getBesitzer(it) == null }.toList()}.toMutableList()
+            val result = mutableListOf<List<Karte>>()
+            combination(all, spieler.anzahlKarten - scorecard.getKarten(spieler, Status.BESITZT).size, result)
+            println("** DEMO ** ${spieler.name} hat Karten aus folgenden Kombinationen: $result")
+        }
+
+    }
+
+    private fun combination(lists: MutableList<List<Karte>>, maxElements: Int, result: MutableList<List<Karte>>, vararg actual: Karte) {
+        if (lists.isEmpty()) {
+            val temp = actual.distinct().sortedBy { it.toString()}
+            if (temp.size <= maxElements) {
+                result.add(temp)
+            }
+            return
+        }
+        lists[0].forEach { element -> combination(lists.subList(1, lists.size), maxElements, result, *actual, element) }
     }
 
     private fun analyzeKarten() {
@@ -104,7 +133,7 @@ class Cluedo(name: List<String>) {
             // dann müssen diese Karten die richtigen sein
             .filter { it.second.size == it.first.anzahlKarten - scorecard.getKarten(it.first, Status.BESITZT).size } //
             .forEach {
-                // setze alle NBEKANNT-Karten auf BESITZT für SPIELER
+                // setze alle UNBEKANNT-Karten auf BESITZT für SPIELER
                 it.second.forEach { karte -> setKarte4Spieler(karte, it.first) }
             }
         // Für 'X' gilt obige Aussage sogar für Karten gleichen Typs
@@ -112,4 +141,12 @@ class Cluedo(name: List<String>) {
             setKarte4Spieler(it[0]!!, spieler.x)
         }
     }
+
+    fun maybe(karte: Karte, spieler: Spieler): Boolean {
+        require(scorecard.getStatus(karte, spieler) == Status.UNBEKANNT) { "Nur für UNBEKANNT erlaubt" }
+        return _verdachtListe.filter {
+            spieler == it.widerlegtVon && it.karten.contains(karte) && karten.all { k -> scorecard.getBesitzer(k) != spieler }
+        }.any()
+    }
+
 }
