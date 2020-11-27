@@ -7,7 +7,7 @@ import de.rolf.games.cluedo.Karte.Tatwaffe
 class Cluedo(name: List<String>) {
 
   val kartenTypen: List<Class<out Karte?>> = listOf(Taeter::class.java, Tatwaffe::class.java, Tatort::class.java)
-  private val karten: List<Karte> = arrayOf(*Taeter.values(), *Tatwaffe.values(), *Tatort.values()).asList()
+  private val karten: List<Karte> = arrayOf(*Taeter.values(), *Tatwaffe.values(), *Tatort.values()).asList<Karte>()
   private val _verdachtListe = mutableListOf<Verdacht>()
   val verdachtListe: List<Verdacht>
     get() = _verdachtListe.toList()
